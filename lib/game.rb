@@ -1,9 +1,12 @@
 #game schematics - ability to save game fundamental
 require_relative './dictionary.rb'
+require_relative 'input.rb'
 require 'json'
+
 
 class Hangman
   include Dictionary
+  include Input
 
   def initialize(word: self.random_word, game_disp: nil, guess_array: [], count: 0)
     @word = word
@@ -32,18 +35,6 @@ class Hangman
     clear_screen
     game_display
     insert_guess(guess_display)
-    @count += 1
-  end
-
-  def guess_display
-    guess = nil
-    print "Insert guess: "
-    guess = gets.chomp[0]
-    until guess && ('a'..'z').include?(guess) || guess == ':'
-      print 'Invalid guess, guess again: '
-      guess = gets.chomp[0]
-    end
-    guess.downcase
   end
 
   def game_over
@@ -53,9 +44,11 @@ class Hangman
   def insert_guess(char)
     if char == ':'
       game_manager
-    else
+    elsif @word.include?(char)
       @word.each_char.with_index { |c, index| @game_disp[index] = char if c == char }
-      @guess_array << char unless @word.include?(char)
+    else
+      @guess_array << char
+      @count += 1
     end
   end
 
@@ -65,19 +58,16 @@ class Hangman
 
   def game_manager
     clear_screen
-    puts 'push 1 to SAVE a Game.. push 2 to LOAD a Game'
-    choice = gets.chomp[0]
-    until ['1', '2'].include?(choice)
-      if choice == 1
-        save_json
-      elsif choice == 2
-        load_json
-      else
-        'Invalid try Again'
-      end
+    choice = game_save_prompt
+    if choice == '1'
+      save_json
+    elsif choice == '2'
+      load_json
+    else
+      puts 'ExitSaving'
     end
   end
-  
+
   def to_json(*args)
     {
       JSON.create_id => self.class.name,
@@ -99,18 +89,22 @@ class Hangman
 
   def load_json
     open_json = File.open('save.json', 'r') # Open the file in read mode
-    puts "HERE"
     object = JSON.parse(open_json.read)
     open_json.close
+    puts 'Game Loading'
+    puts 'Push any key to continue ...'
+    gets.chomp
     loaded_game(object)
   end
 
   def loaded_game(obj)
-    puts obj
     @word = obj['word']
     @game_disp = obj['game_disp']
     @guess_array = obj['guess_array']
     @count = obj['count']
+    puts 'Game Loaded'
+    puts 'Push any key to continue ...'
+    gets.chomp
   end
 end
 
