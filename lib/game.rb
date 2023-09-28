@@ -5,11 +5,11 @@ require 'json'
 class Hangman
   include Dictionary
 
-  def initialize()
-    @word = self.random_word
-    @game_disp = '_' * @word.size
-    @guess_array = Array.new
-    @count = 0
+  def initialize(word: self.random_word, game_disp: nil, guess_array: [], count: 0)
+    @word = word
+    @game_disp = game_disp || '_' * word.size
+    @guess_array = guess_array
+    @count = count
   end
 
   def main_game
@@ -31,14 +31,19 @@ class Hangman
   def guess()
     clear_screen
     game_display
-    print "Insert guess: "
-    guess = gets.chomp[0].downcase
-    until ('a'..'z').include? guess
-      print 'Invalid guess, guess again: '
-      guess = gets.chomp[0].downcase
-    end
-    insert_guess(guess)
+    insert_guess(guess_display)
     @count += 1
+  end
+
+  def guess_display
+    guess = nil
+    print "Insert guess: "
+    guess = gets.chomp[0]
+    until guess && ('a'..'z').include?(guess) || guess == ':'
+      print 'Invalid guess, guess again: '
+      guess = gets.chomp[0]
+    end
+    guess.downcase
   end
 
   def game_over
@@ -46,14 +51,11 @@ class Hangman
   end
 
   def insert_guess(char)
-    if @word.include?(char)
-      @word.each_char.with_index do |c, index|
-        if c == char 
-          @game_disp[index] = char
-        end
-      end
+    if char == ':'
+      game_manager
     else
-      @guess_array << char
+      @word.each_char.with_index { |c, index| @game_disp[index] = char if c == char }
+      @guess_array << char unless @word.include?(char)
     end
   end
 
@@ -61,6 +63,21 @@ class Hangman
     system('clear') || system('cls')
   end
 
+  def game_manager
+    clear_screen
+    puts 'push 1 to SAVE a Game.. push 2 to LOAD a Game'
+    choice = gets.chomp[0]
+    until ['1', '2'].include?(choice)
+      if choice == 1
+        save_json
+      elsif choice == 2
+        load_json
+      else
+        'Invalid try Again'
+      end
+    end
+  end
+  
   def to_json(*args)
     {
       JSON.create_id => self.class.name,
@@ -75,18 +92,29 @@ class Hangman
     save_json = File.open('save.json', 'w')
     save_json.write(self.to_json)
     save_json.close
-    puts 'completed'
+    puts 'Game Saved'
+    puts 'Push any key to continue ...'
+    gets.chomp
   end
 
   def load_json
     open_json = File.open('save.json', 'r') # Open the file in read mode
-    json_string = open_json.read
-    object = JSON.parse(json_string, object_class: Hangman)
-    puts object
+    puts "HERE"
+    object = JSON.parse(open_json.read)
     open_json.close
-    puts 'Loaded game'
+    loaded_game(object)
+  end
+
+  def loaded_game(obj)
+    puts obj
+    @word = obj['word']
+    @game_disp = obj['game_disp']
+    @guess_array = obj['guess_array']
+    @count = obj['count']
   end
 end
 
 game = Hangman.new
-game.load_json
+obj = game.main_game
+#load_game = Hangman.new(word: obj['word'], game_disp: obj['game_disp'], guess_array: obj['guess_array'], count: obj['count'])
+#load_game.main_game

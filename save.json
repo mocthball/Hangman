@@ -1,1 +1,1 @@
-{"json_class":"Hangman","word":"adrian","game_disp":"______","guess_array":[],"count":0}
+{"json_class":"Hangman","word":"personnel","game_disp":"__r______","guess_array":["f","v","c","x","w"],"count":7}
