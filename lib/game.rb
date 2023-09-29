@@ -1,8 +1,7 @@
-#game schematics - ability to save game fundamental
+# game schematics - ability to save game fundamental
 require_relative './dictionary.rb'
 require_relative 'input.rb'
 require 'json'
-
 
 class Hangman
   include Dictionary
@@ -20,7 +19,7 @@ class Hangman
     clear_screen
     puts "The WORD was: #{@word}"
     if @word == @game_disp
-      puts 'You Win!' 
+      puts 'You Win!'
     else
       puts 'You Lose!'
     end
@@ -110,5 +109,3 @@ end
 
 game = Hangman.new
 obj = game.main_game
-#load_game = Hangman.new(word: obj['word'], game_disp: obj['game_disp'], guess_array: obj['guess_array'], count: obj['count'])
-#load_game.main_game
